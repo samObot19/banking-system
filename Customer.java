@@ -28,7 +28,8 @@ public class Customer extends JFrame implements ActionListener{
     private ButtonGroup Gender;
     private JPanel panel, sexHolderPanel, addressPanel, identificationPanel;
     private ImageIcon defaultIcon = new ImageIcon("photo.jpg");
-    private JComboBox<String> Nationality, liveCountry, cityList, accountTypeList;
+    private JComboBox<String> Nationality, liveCountry, cityList;
+    private static JComboBox<String> accountTypeList;
     private final int lengthF = 850;
     private final int widthF = 775;
     private final int widthP = 800;
@@ -40,7 +41,8 @@ public class Customer extends JFrame implements ActionListener{
     private String customerPassword;
     private static JFileChooser fileChooser;
     //private SpinnerDateModel model;
-    private JSpinner birthDateSpinner, intialAmount;
+    private JSpinner birthDateSpinner;
+    private static JSpinner intialAmount;
     private static String selected;
 
     private String First_name, Middle_name, Last_name, Phone_number, Email;
@@ -256,9 +258,9 @@ public class Customer extends JFrame implements ActionListener{
 
         String[] lst = {"saving", "checking", "CD", "money market", "Loan"};
         accountTypeList = new JComboBox(lst);
-        int min = 100;
-        int max = 100000;
-        int increment = 20;
+        float min = 100;
+        float max = 100000;
+        float increment = 20;
         SpinnerNumberModel mod = new SpinnerNumberModel(min, min, max, increment);
         intialAmount = new JSpinner(mod);
         NationalityL = new JLabel("Nationality", JLabel.CENTER);
@@ -408,10 +410,10 @@ public class Customer extends JFrame implements ActionListener{
         return phone.matches(pattern);
     }
 
-    private static String generateID(){
+    private static String generateID(int m){
         Random random = new Random();
-        int id = random.nextInt(1000000);
-        return String.format("%07d", id);
+        long id = random.nextLong((long) Math.pow(10, m));
+        return String.format("%0" + m + "d", id);
     }
 
     private static boolean isIDExist(String id){
@@ -444,7 +446,9 @@ public class Customer extends JFrame implements ActionListener{
                 Class.forName("com.mysql.cj.jdbc.Driver");
                 Connection connection = DriverManager.getConnection(url, userName, Password);
                 String Query = "INSERT INTO Customer(FirstName, MiddleName, LastName, Gender, phoneNumber, Email, photo, birth_date, Nationality, password) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                PreparedStatement stmt = connection.prepareStatement(Query);
+                String accountCreaterQuery = "INSERT INTO account (Customer_ID, AccountNumber, AccountType, Balance) VALUES(?, ?, ?, ?)";
+                PreparedStatement stmt = connection.prepareStatement(Query, Statement.RETURN_GENERATED_KEYS);
+                PreparedStatement stmt2 = connection.prepareStatement(accountCreaterQuery);
 
                 //geting info to the photo file 
                 File selectedPhotoFile = fileChooser.getSelectedFile();  //uploading file from th desktop
@@ -454,7 +458,7 @@ public class Customer extends JFrame implements ActionListener{
                 Date birthdate = (Date) birthDateSpinner.getValue();
                 java.sql.Date sqldate = new java.sql.Date(birthdate.getTime());
                 String nation = (String) Nationality.getSelectedItem();
-                customerPassword = generateCustomerID(); 
+                customerPassword = generateCustomerID(7); 
                 //inserting to the database
                 stmt.setString(1, First_name);
                 stmt.setString(2, Middle_name);
@@ -467,10 +471,22 @@ public class Customer extends JFrame implements ActionListener{
                 stmt.setString(9, nation);
                 stmt.setString(10, customerPassword);
                 stmt.executeUpdate();
+
+                ResultSet customerID = stmt.getGeneratedKeys();
+                long cId = 0;
+                if(customerID.next()){
+                    cId = customerID.getLong(1);
+                }
+                stmt2.setLong(1, cId);
+                stmt2.setString(2, generateCustomerID(12));
+                stmt2.setString(3, (String) accountTypeList.getSelectedItem());
+                stmt2.setDouble(4, (Double) intialAmount.getValue());
+                stmt2.executeUpdate();
+                stmt2.close();
+
                 if (stmt.executeUpdate() > 0) {
                     JOptionPane.showMessageDialog(null, "registered!", "valid", JOptionPane.INFORMATION_MESSAGE);
                 }
-
                 stmt.close();
                 connection.close();
             }catch(SQLIntegrityConstraintViolationException d){
@@ -481,10 +497,10 @@ public class Customer extends JFrame implements ActionListener{
         }
     }
 
-    private static String generateCustomerID(){
+    private static String generateCustomerID(int m){
         try {
             while (true) {
-                String Id = generateID();
+                String Id = generateID(m);
                 if (!isIDExist(Id)) {
                     return Id;
                 }
@@ -493,10 +509,10 @@ public class Customer extends JFrame implements ActionListener{
             JOptionPane.showMessageDialog(null, e, "error in generating id", JOptionPane.ERROR_MESSAGE);
         }
         return null;
-    }   
+    }
 
     public static void main(String[] args){
-        EventQueue.invokeLater(new Runnable() {
+        EventQueue.invokeLater(new Runnable(){
             public void run() {
                 new Customer();
             }
