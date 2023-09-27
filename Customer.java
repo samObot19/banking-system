@@ -410,29 +410,6 @@ public class Customer extends JFrame implements ActionListener{
         return phone.matches(pattern);
     }
 
-    private static String generateID(int m){
-        Random random = new Random();
-        long id = random.nextLong((long) Math.pow(10, m));
-        return String.format("%0" + m + "d", id);
-    }
-
-    private static boolean isIDExist(String id){
-        try {
-            Connection conn = DriverManager.getConnection(url, userName, Password);
-            PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) FROM customer WHERE password=" + id);
-            ResultSet resultSet =stmt.executeQuery();
-            resultSet.next();
-            int count = resultSet.getInt(1);
-            stmt.close();
-            conn.close();
-            return count > 0;
-            
-        } catch (Exception e) {
-             JOptionPane.showMessageDialog(null, "error in unique id creation!", "failed", JOptionPane.ERROR_MESSAGE);
-            
-        }
-        return true;            
-    }
 
     public class Final_buttton_handdler implements ActionListener{
         public void actionPerformed(ActionEvent e){
@@ -458,7 +435,9 @@ public class Customer extends JFrame implements ActionListener{
                 Date birthdate = (Date) birthDateSpinner.getValue();
                 java.sql.Date sqldate = new java.sql.Date(birthdate.getTime());
                 String nation = (String) Nationality.getSelectedItem();
-                customerPassword = generateCustomerID(7); 
+                //generating unique password for
+                passwordGenerator custPassword = new passwordGenerator("customer", "password", 7);
+                customerPassword = custPassword.getId(); 
                 //inserting to the database
                 stmt.setString(1, First_name);
                 stmt.setString(2, Middle_name);
@@ -477,8 +456,10 @@ public class Customer extends JFrame implements ActionListener{
                 if(customerID.next()){
                     cId = customerID.getLong(1);
                 }
+
+                passwordGenerator accNumber = new passwordGenerator("account", "AccountNumber", 12);
                 stmt2.setLong(1, cId);
-                stmt2.setString(2, generateCustomerID(12));
+                stmt2.setString(2, accNumber.getId());
                 stmt2.setString(3, (String) accountTypeList.getSelectedItem());
                 stmt2.setDouble(4, (Double) intialAmount.getValue());
                 stmt2.executeUpdate();
@@ -495,20 +476,6 @@ public class Customer extends JFrame implements ActionListener{
                 JOptionPane.showMessageDialog(null, m, "error in connection", JOptionPane.ERROR_MESSAGE);
             }           
         }
-    }
-
-    private static String generateCustomerID(int m){
-        try {
-            while (true) {
-                String Id = generateID(m);
-                if (!isIDExist(Id)) {
-                    return Id;
-                }
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, e, "error in generating id", JOptionPane.ERROR_MESSAGE);
-        }
-        return null;
     }
 
     public static void main(String[] args){
