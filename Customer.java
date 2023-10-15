@@ -29,7 +29,7 @@ public class Customer extends JFrame implements ActionListener{
     private JPanel panel, sexHolderPanel, addressPanel, identificationPanel;
     private ImageIcon defaultIcon = new ImageIcon("photo.jpg");
     private JComboBox<String> Nationality, liveCountry, cityList;
-    private static JComboBox<String> accountTypeList;
+    private JComboBox<String> accountTypeList;
     private final int lengthF = 850;
     private final int widthF = 775;
     private final int widthP = 800;
@@ -257,7 +257,7 @@ public class Customer extends JFrame implements ActionListener{
         selectionOfAcountType.setForeground(Color.WHITE);
 
         String[] lst = {"saving", "checking", "CD", "money market", "Loan"};
-        accountTypeList = new JComboBox(lst);
+        accountTypeList = new JComboBox<String>(lst);
         float min = 100;
         float max = 100000;
         float increment = 20;
