@@ -8,8 +8,8 @@ public class counter{
     private long conditions;
 
     private static final String url = "jdbc:mysql://localhost:3306/Banking system";
-    private static final String userName = "sqluser";
-    private static final String password = "ssbhy";
+    private static final String userName = "";
+    private static final String password = "";
     public counter(String tabelName, String columnName, long conditions){
         this.tabelName = tabelName;
         this.columnName = columnName;
